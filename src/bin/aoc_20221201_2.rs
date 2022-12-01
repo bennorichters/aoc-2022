@@ -14,13 +14,12 @@ fn lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
 
 fn main() {
     let lines = lines_from_file("in");
-
     let iter = lines.split(|e| e.is_empty());
 
     let mut all: Vec<i32> = Vec::new();
     for elf in iter {
-        let content: Vec<i32> = elf.iter().map(|e| e.parse::<i32>().unwrap()).collect();
-        all.push(content.iter().sum());
+        let sum = elf.iter().map(|e| e.parse::<i32>().unwrap()).sum();
+        all.push(sum);
     }
 
     all.sort();

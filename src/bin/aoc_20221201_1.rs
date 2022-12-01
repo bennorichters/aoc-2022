@@ -14,22 +14,15 @@ fn lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
 
 fn main() {
     let lines = lines_from_file("in");
+    let iter = lines.split(|e| e.is_empty());
 
-    let mut iter = lines.split(|e| e.is_empty());
-
-    let mut max = 0;
-    loop {
-        let elf = iter.next();
-        if elf.is_none() {
-            break;
-        }
-
-        let mut total = 0;
-        for c in elf.unwrap() {
-            total += c.parse::<i32>().unwrap();
-        }
-
-        max = if total > max { total } else { max };
+    let mut all: Vec<i32> = Vec::new();
+    for elf in iter {
+        let sum = elf.iter().map(|e| e.parse::<i32>().unwrap()).sum();
+        all.push(sum);
     }
-    println!("{}", max);
+
+    all.sort();
+    all.reverse();
+    println!("{:?}", all[0]);
 }

@@ -17,7 +17,7 @@ fn main() {
 
     let mut iter = lines.split(|e| e.is_empty());
 
-    let mut max = 0;
+    let mut all: Vec<i32> = Vec::new();
     loop {
         let elf = iter.next();
         if elf.is_none() {
@@ -28,8 +28,11 @@ fn main() {
         for c in elf.unwrap() {
             total += c.parse::<i32>().unwrap();
         }
-
-        max = if total > max { total } else { max };
+        all.push(total);
     }
-    println!("{}", max);
+
+    all.sort();
+    all.reverse();
+    let result = all[0] + all[1] + all[2];
+    println!("{:?}", result);
 }

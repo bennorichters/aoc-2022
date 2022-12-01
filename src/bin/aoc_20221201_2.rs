@@ -25,5 +25,5 @@ fn main() {
     all.sort();
     all.reverse();
     let result = all[0] + all[1] + all[2];
-    println!("{:?}", result);
+    println!("{}", result);
 }

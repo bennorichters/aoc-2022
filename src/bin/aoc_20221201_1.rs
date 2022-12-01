@@ -24,5 +24,5 @@ fn main() {
 
     all.sort();
     all.reverse();
-    println!("{:?}", all[0]);
+    println!("{}", all[0]);
 }

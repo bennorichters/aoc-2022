@@ -35,7 +35,6 @@ fn main() {
                 "Z" => score += 3 + 6,
                 _ => panic!(""),
             },
-
             "C" => match you {
                 "X" => score += 1 + 6,
                 "Y" => score += 2 + 0,

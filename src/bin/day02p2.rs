@@ -40,7 +40,6 @@ fn main() {
                 "Z" => score += 3 + 6,
                 _ => panic!(""),
             },
-
             // Scissors
             "C" => match you {
                 "X" => score += 2 + 0,

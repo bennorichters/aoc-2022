@@ -26,8 +26,7 @@ fn main() {
 }
 
 fn score(line1: &str, line2: &str, line3: &str) -> usize {
-    for k in 0..line1.len() {
-        let c = line1.chars().nth(k).unwrap();
+    for c in line1.chars() {
         if line2.contains(c) && line3.contains(c) {
             return ITEMS.find(c).unwrap() + 1;
         }

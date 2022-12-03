@@ -26,11 +26,9 @@ fn main() {
 }
 
 fn score(line: &str) -> usize {
-    let m = line.len() / 2;
-    for i in 0..m {
-        let c1 = line.chars().nth(i).unwrap();
-        for j in m..(m * 2) {
-            let c2 = line.chars().nth(j).unwrap();
+    let middle = line.len() / 2;
+    for c1 in line[..middle].chars() {
+        for c2 in line[middle..].chars() {
             if c1 == c2 {
                 return ITEMS.find(c1).unwrap() + 1;
             }

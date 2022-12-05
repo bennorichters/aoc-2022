@@ -21,9 +21,7 @@ fn main() {
     let stack_lines = puzzle_parts.next().unwrap();
 
     let nr_of_stacks = (lines[0].len() + 1) / 4;
-    let mut stacks: Vec<Vec<&str>> = Vec::new();
-    stacks.resize(nr_of_stacks, Vec::new());
-
+    let mut stacks: Vec<Vec<&str>> = (0..nr_of_stacks).map(|_| Vec::new()).collect();
     for line in stack_lines.split_last().unwrap().1 {
         for i in 0..nr_of_stacks {
             let position = 1 + 4 * i;

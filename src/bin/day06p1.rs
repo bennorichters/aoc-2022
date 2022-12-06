@@ -17,11 +17,11 @@ fn main() {
     let lines = lines_from_file("in");
 
     let marker = 4;
-    for (i, w) in (&lines[0].as_bytes()).windows(marker).enumerate() {
-        if w.iter().collect::<HashSet<_>>().len() == marker {
-            println!("{}", i + marker);
-            break;
-        }
-    }
-}
+    let a = (&lines[0].as_bytes())
+        .windows(marker)
+        .map(|w| w.iter().collect::<HashSet<_>>())
+        .position(|w| w.len() == marker)
+        .unwrap();
 
+    println!("{}", a + marker);
+}

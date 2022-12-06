@@ -16,13 +16,12 @@ fn lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
 fn main() {
     let lines = lines_from_file("in");
 
-    let line = &lines[0];
     let marker = 4;
-    for i in 0..(line.len() - marker) {
-        let distinct: HashSet<char> = line[i..(i + marker)].chars().collect();
-        if distinct.len() == marker {
+    for (i, w) in (&lines[0].as_bytes()).windows(marker).enumerate() {
+        if w.iter().collect::<HashSet<_>>().len() == marker {
             println!("{}", i + marker);
             break;
         }
     }
 }
+

@@ -15,7 +15,7 @@ fn lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
 fn main() {
     let lines = lines_from_file("in");
 
-    let dirs = process_dir(&lines);
+    let dirs = dir_sizes(&lines);
 
     let part1: u32 = dirs.iter().filter(|&e| e < &100_000).sum();
 
@@ -27,31 +27,33 @@ fn main() {
     println!("part 1: {}, part 2: {}", part1, part2);
 }
 
-fn process_dir(lines: &[String]) -> Vec<u32> {
+fn dir_sizes(lines: &[String]) -> Vec<u32> {
     let mut dirs: Vec<u32> = Vec::new();
 
-    let mut stack_size: Vec<u32> = Vec::new();
-    for line in lines {
-        let s: Vec<&str> = line.split(" ").collect();
+    let mut to_parse = (&lines[2..]).iter();
+    let mut size_stack: Vec<u32> = vec![0];
+    while !size_stack.is_empty() {
+        let to_parse_next = to_parse.next();
+        let mut pop_stack = false;
 
-        if s[1] == "cd" && s[2] != ".." {
-            stack_size.push(0);
-        } else if s[1] == "cd" {
-            let sub = stack_size.pop().unwrap();
-            dirs.push(sub);
-            *stack_size.last_mut().unwrap() += sub;
-        } else {
-            let number = s[0].parse::<u32>();
-            if number.is_ok() {
-                *stack_size.last_mut().unwrap() += number.unwrap();
+        if let Some(line) = to_parse_next {
+            let s: Vec<&str> = line.split(" ").collect();
+            if s[1] == "cd" && s[2] != ".." {
+                size_stack.push(0);
+            } else if s[1] == "cd" {
+                pop_stack = true;
+            } else if let Ok(number) = s[0].parse::<u32>() {
+                *size_stack.last_mut().unwrap() += number;
             }
         }
-    }
 
-    let mut total = 0;
-    for sub in stack_size.iter().rev() {
-        total += sub;
-        dirs.push(total);
+        if to_parse_next.is_none() || pop_stack {
+            let sub = size_stack.pop().unwrap();
+            dirs.push(sub);
+            if let Some(last) = size_stack.last_mut() {
+                *last += sub;
+            }
+        }
     }
 
     dirs

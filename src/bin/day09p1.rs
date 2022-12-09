@@ -41,20 +41,12 @@ fn solve() {
                 _ => panic!(""),
             }
 
-            if (h.0 - t.0).abs() == 2 {
-                t = Coord(t.0 + (h.0 - t.0) / 2, t.1);
-                if h.1 != t.1 {
-                    t = Coord(t.0, h.1);
-                }
-            }
+            if (h.0 - t.0).abs() == 2 || (h.1 - t.1).abs() == 2 {
+                let dx = (h.0 - t.0).signum();
+                let dy = (h.1 - t.1).signum();
+                t = Coord(t.0 + dx, t.1 + dy);
 
-            if (h.1 - t.1).abs() == 2 {
-                t = Coord(t.0, t.1 + (h.1 - t.1) / 2);
-                if h.0 != t.0 {
-                    t = Coord(h.0, t.1);
-                }
             }
-
             visited.insert(t.clone());
         }
     }

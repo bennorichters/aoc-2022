@@ -41,25 +41,10 @@ fn solve() {
             }
 
             for k in 1..10 {
-                if (ks[k - 1].0 - ks[k].0).abs() == 2 && (ks[k - 1].1 - ks[k].1).abs() == 2 {
-                    ks[k] = Coord(
-                        ks[k].0 + (ks[k - 1].0 - ks[k].0) / 2,
-                        ks[k].1 + (ks[k - 1].1 - ks[k].1) / 2,
-                    );
-                } else {
-                    if (ks[k - 1].0 - ks[k].0).abs() == 2 {
-                        ks[k] = Coord(ks[k].0 + (ks[k - 1].0 - ks[k].0) / 2, ks[k].1);
-                        if ks[k - 1].1 != ks[k].1 {
-                            ks[k] = Coord(ks[k].0, ks[k - 1].1);
-                        }
-                    }
-
-                    if (ks[k - 1].1 - ks[k].1).abs() == 2 {
-                        ks[k] = Coord(ks[k].0, ks[k].1 + (ks[k - 1].1 - ks[k].1) / 2);
-                        if ks[k - 1].0 != ks[k].0 {
-                            ks[k] = Coord(ks[k - 1].0, ks[k].1);
-                        }
-                    }
+                if (ks[k - 1].0 - ks[k].0).abs() == 2 || (ks[k - 1].1 - ks[k].1).abs() == 2 {
+                    let dx = (ks[k - 1].0 - ks[k].0).signum();
+                    let dy = (ks[k - 1].1 - ks[k].1).signum();
+                    ks[k] = Coord(ks[k].0 + dx, ks[k].1 + dy);
                 }
             }
 

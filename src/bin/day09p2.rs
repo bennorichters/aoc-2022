@@ -32,13 +32,13 @@ fn solve() {
         let m = s[0];
         let n = s[1].parse::<u32>().unwrap();
         for _ in 0..n {
-            match m {
-                "U" => ks[0] = Coord(ks[0].0, ks[0].1 - 1),
-                "R" => ks[0] = Coord(ks[0].0 + 1, ks[0].1),
-                "D" => ks[0] = Coord(ks[0].0, ks[0].1 + 1),
-                "L" => ks[0] = Coord(ks[0].0 - 1, ks[0].1),
+            ks[0] = match m {
+                "U" => Coord(ks[0].0, ks[0].1 - 1),
+                "R" => Coord(ks[0].0 + 1, ks[0].1),
+                "D" => Coord(ks[0].0, ks[0].1 + 1),
+                "L" => Coord(ks[0].0 - 1, ks[0].1),
                 _ => panic!(""),
-            }
+            };
 
             for k in 1..10 {
                 if (ks[k - 1].0 - ks[k].0).abs() == 2 || (ks[k - 1].1 - ks[k].1).abs() == 2 {

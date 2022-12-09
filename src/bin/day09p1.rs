@@ -33,13 +33,13 @@ fn solve() {
         let m = s[0];
         let n = s[1].parse::<u32>().unwrap();
         for _ in 0..n {
-            match m {
-                "U" => h = Coord(h.0, h.1 - 1),
-                "R" => h = Coord(h.0 + 1, h.1),
-                "D" => h = Coord(h.0, h.1 + 1),
-                "L" => h = Coord(h.0 - 1, h.1),
+            h = match m {
+                "U" => Coord(h.0, h.1 - 1),
+                "R" => Coord(h.0 + 1, h.1),
+                "D" => Coord(h.0, h.1 + 1),
+                "L" => Coord(h.0 - 1, h.1),
                 _ => panic!(""),
-            }
+            };
 
             if (h.0 - t.0).abs() == 2 || (h.1 - t.1).abs() == 2 {
                 let dx = (h.0 - t.0).signum();

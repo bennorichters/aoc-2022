@@ -12,6 +12,7 @@ Cargo.lock
 # File with input for puzzles (e.g. https://adventofcode.com/2020/day/1/input)
 in
 tin
+tins
 
 # To play around with
 **/sandbox.rs

@@ -45,9 +45,9 @@ fn solve() {
         }
 
         let draw = if ((x - 1)..=(x + 1)).contains(&(crt_x as i32)) {
-            "#"
+            "██"
         } else {
-            "."
+            "░░"
         };
         result.last_mut().unwrap().push(draw);
     }

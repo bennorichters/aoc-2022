@@ -40,7 +40,7 @@ fn solve() {
         }
 
         let crt_x = cycle % 40;
-        if crt_x % 40 == 0 {
+        if crt_x == 0 {
             result.push(Vec::new());
         }
 

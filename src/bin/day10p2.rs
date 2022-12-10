@@ -24,27 +24,26 @@ fn solve() {
 
     let mut x: i32 = 1;
     let mut read = 0;
-    let mut change = 0;
+    let mut value = 0;
     for cycle in 0..240 {
         if cycle == read {
-            x += change;
+            x += value;
             let s: Vec<&str> = lines_it.next().unwrap().split(" ").collect();
             if s[0] == "addx" {
-                let nr = s[1].parse::<i32>().unwrap();
-                change = nr;
+                value = s[1].parse::<i32>().unwrap();
                 read += 2;
             } else {
-                change = 0;
+                value = 0;
                 read += 1;
             }
         }
 
-        let crt_x = cycle % 40;
-        if crt_x == 0 {
+        let crt_column = cycle % 40;
+        if crt_column == 0 {
             result.push(Vec::new());
         }
 
-        let draw = if ((x - 1)..=(x + 1)).contains(&(crt_x as i32)) {
+        let draw = if ((x - 1)..=(x + 1)).contains(&(crt_column as i32)) {
             "██"
         } else {
             "░░"

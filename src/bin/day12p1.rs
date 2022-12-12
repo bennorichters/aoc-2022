@@ -88,43 +88,40 @@ impl Puzzle {
 
     fn start(&mut self) {
         let path = self.walk();
-        println!("{}", path.len());
+        println!("{}", path);
     }
 
-    fn walk(&mut self) -> Vec<Coord> {
-        let mut result: Vec<Coord> = Vec::new();
+    fn walk(&mut self) -> usize {
+        let mut result = 0;
         let mut state_stack: Vec<State> = Vec::new();
 
         let mut visited: HashMap<Coord, usize> = HashMap::new();
         state_stack.push(State {
             position: self.s.clone(),
             elevation: 0,
-            path: Vec::new(),
+            path: 0,
         });
 
         while !state_stack.is_empty() {
-            state_stack.sort_by(|a, b| b.path.len().cmp(&a.path.len()));
+            state_stack.sort_by(|a, b| b.path.cmp(&a.path));
             let state = state_stack.pop().unwrap();
 
             if !visited.contains_key(&state.position)
-                || *visited.get(&state.position).unwrap() > state.path.len()
+                || *visited.get(&state.position).unwrap() > state.path
             {
                 if state.position == self.e {
-                    result = state.path.clone();
+                    result = state.path;
                 }
-                visited.insert(state.position.clone(), state.path.len());
+                visited.insert(state.position.clone(), state.path);
 
                 let options = self.options(&state.position);
                 for op in &options {
                     let elevation = self.map.get(&op).unwrap();
                     if elevation <= &(state.elevation + 1) {
-                        let mut extra_path = state.path.clone();
-                        extra_path.push(op.clone());
-
                         state_stack.push(State {
                             position: op.clone(),
                             elevation: *elevation,
-                            path: extra_path,
+                            path: state.path + 1,
                         });
                     }
                 }
@@ -139,5 +136,5 @@ impl Puzzle {
 struct State {
     position: Coord,
     elevation: u8,
-    path: Vec<Coord>,
+    path: usize,
 }

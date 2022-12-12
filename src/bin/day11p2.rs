@@ -32,7 +32,7 @@ struct Monkey {
     test_fail: usize,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 struct Item {
     value: u64,
     executed_operations: Vec<Operation>,
@@ -40,36 +40,33 @@ struct Item {
 
 fn solve() {
     let mut monkeys = parse();
-
-    activity(&mut monkeys);
+    throw_items(&mut monkeys);
 }
 
-fn activity(monkeys: &mut Vec<Monkey>) {
-    let mut activity: Vec<u64> = (0..monkeys.len()).map(|_| 0).collect();
+fn throw_items(monkeys: &mut Vec<Monkey>) {
+    let mut activity = vec![0u64; monkeys.len()];
     for _ in 0..10_000 {
         for m in 0..monkeys.len() {
-            let mut transfers: Vec<(Item, usize)> = Vec::new();
             let monkey = &mut monkeys[m];
-
             activity[m] += *(&monkey.items.len()) as u64;
-            for item in &monkey.items {
-                let mut ops = item.executed_operations.clone();
-                ops.push(monkey.operation.clone());
-                let to = if test_item(monkey.test, item.value, ops) {
+
+            let mut transfers: Vec<(Item, usize)> = Vec::new();
+            while !monkey.items.is_empty() {
+                let mut item = monkey.items.pop().unwrap();
+                item.executed_operations.push(monkey.operation.clone());
+                let to = if test_item(monkey.test, &item) {
                     monkey.test_pass
                 } else {
                     monkey.test_fail
                 };
 
-                transfers.push((item.clone(), to));
+                transfers.push((item, to));
             }
-            let operation = monkey.operation.clone();
 
             monkeys[m].items.clear();
-            for transfer in &transfers {
-                let mut updated_item = transfer.0.clone();
-                updated_item.executed_operations.push(operation);
-                monkeys[transfer.1].items.push(updated_item);
+            while !transfers.is_empty() {
+                let transfer = transfers.pop().unwrap();
+                monkeys[transfer.1].items.push(transfer.0);
             }
         }
     }
@@ -79,10 +76,10 @@ fn activity(monkeys: &mut Vec<Monkey>) {
     println!("{}", activity[0] * activity[1]);
 }
 
-fn test_item(test: u64, item_value: u64, item_ops: Vec<Operation>) -> bool {
-    let mut remainder = item_value % test;
+fn test_item(test: u64, item: &Item) -> bool {
+    let mut remainder = item.value % test;
 
-    for op in item_ops {
+    for op in &item.executed_operations {
         remainder = match op {
             Operation::Add(value) => (remainder % test) + value,
             Operation::Multiply(value) => (remainder % test) * value,
@@ -94,7 +91,7 @@ fn test_item(test: u64, item_value: u64, item_ops: Vec<Operation>) -> bool {
 }
 
 fn parse() -> Vec<Monkey> {
-    let lines = lines_from_file("in");
+    let lines = lines_from_file("tin");
     let iter = lines.split(|e| e.is_empty());
 
     let mut monkeys: Vec<Monkey> = Vec::new();
@@ -132,7 +129,7 @@ fn parse() -> Vec<Monkey> {
             .unwrap();
 
         monkeys.push(Monkey {
-            items: items.clone(),
+            items,
             operation,
             test,
             test_pass,

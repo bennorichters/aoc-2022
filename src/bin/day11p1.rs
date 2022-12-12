@@ -18,16 +18,16 @@ fn main() {
 
 #[derive(Clone, Debug, Hash, Eq, PartialEq)]
 enum Operation {
-    Add(u32),
-    Multiply(u32),
+    Add(u64),
+    Multiply(u64),
     Square,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq)]
 struct Monkey {
-    items: Vec<u32>,
+    items: Vec<u64>,
     operation: Operation,
-    test: u32,
+    test: u64,
     test_pass: usize,
     test_fail: usize,
 }
@@ -35,13 +35,13 @@ struct Monkey {
 fn solve() {
     let mut monkeys = parse();
 
-    let mut activity: Vec<u32> = (0..monkeys.len()).map(|_| 0).collect();
+    let mut activity = vec![0u64; monkeys.len()];
     for _ in 0..20 {
         for m in 0..monkeys.len() {
-            let mut transfers: Vec<(u32, usize)> = Vec::new();
+            let mut transfers: Vec<(u64, usize)> = Vec::new();
             let monkey = &monkeys[m];
 
-            activity[m] += *(&monkey.items.len()) as u32;
+            activity[m] += *(&monkey.items.len()) as u64;
             for item in &monkey.items {
                 let worry_level = match monkey.operation {
                     Operation::Add(value) => item + value,
@@ -80,9 +80,9 @@ fn parse() -> Vec<Monkey> {
 
     let mut monkeys: Vec<Monkey> = Vec::new();
     for monkey_lines in iter {
-        let items: Vec<u32> = (&monkey_lines[1]["  Starting items: ".len()..])
+        let items: Vec<u64> = (&monkey_lines[1]["  Starting items: ".len()..])
             .split(",")
-            .map(|i| i.trim().parse::<u32>().unwrap())
+            .map(|i| i.trim().parse::<u64>().unwrap())
             .collect();
 
         let operation_line = &monkey_lines[2]["  Operation: new = old ".len()..];
@@ -93,7 +93,7 @@ fn parse() -> Vec<Monkey> {
             .split(" ")
             .last()
             .unwrap()
-            .parse::<u32>()
+            .parse::<u64>()
             .unwrap();
 
         let test_pass = monkey_lines[4]
@@ -110,7 +110,7 @@ fn parse() -> Vec<Monkey> {
             .unwrap();
 
         monkeys.push(Monkey {
-            items: items.clone(),
+            items,
             operation,
             test,
             test_pass,
@@ -126,7 +126,7 @@ fn parse_operation(p0: &str, p1: &str) -> Operation {
         return Operation::Square;
     }
 
-    let v = p1.parse::<u32>().unwrap();
+    let v = p1.parse::<u64>().unwrap();
     if p0 == "+" {
         return Operation::Add(v);
     }

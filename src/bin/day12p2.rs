@@ -1,9 +1,8 @@
 use std::{
-    cmp,
     collections::HashMap,
     fs::File,
     io::{prelude::*, BufReader},
-    path::Path,
+    path::Path, cmp,
 };
 
 fn lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
@@ -30,23 +29,17 @@ fn solve() {
     let width = lines[0].len();
     let height = lines.len();
 
-    let mut zeros: Vec<Coord> = Vec::new();
     for y in 0..height {
         for x in 0..width {
             let c = lines[y].chars().nth(x).unwrap();
             if c == 'S' {
                 map.insert(Coord(x, y), 0);
-                zeros.push(Coord(x, y));
             } else if c == 'E' {
                 e = Coord(x, y);
                 map.insert(Coord(x, y), 25);
             } else {
                 let elevation = lines[y].as_bytes().iter().nth(x).unwrap() - b'a';
                 map.insert(Coord(x, y), elevation);
-
-                if elevation == 0 {
-                    zeros.push(Coord(x, y));
-                }
             }
         }
     }
@@ -58,7 +51,7 @@ fn solve() {
         e,
     };
 
-    puzzle.start(zeros);
+    println!("{}", puzzle.walk());
 }
 
 #[derive(Debug)]
@@ -89,51 +82,37 @@ impl Puzzle {
         result
     }
 
-    fn start(&mut self, zeros: Vec<Coord>) {
-        let mut result = 1000;
-        for z in zeros {
-            let path = self.walk(&z);
-            if path.len() > 0 {
-                result = cmp::min(result, path.len());
-            }
-        }
-        println!("{}", result);
-    }
-
-    fn walk(&mut self, current: &Coord) -> Vec<Coord> {
-        let mut result: Vec<Coord> = Vec::new();
+    fn walk(&mut self) -> usize {
+        let mut result = self.width * self.height;
         let mut state_stack: Vec<State> = Vec::new();
 
         let mut visited: HashMap<Coord, usize> = HashMap::new();
         state_stack.push(State {
-            position: current.clone(),
-            elevation: 0,
-            path: Vec::new(),
+            position: self.e.clone(),
+            elevation: 25,
+            path: 0,
         });
 
         while !state_stack.is_empty() {
-            state_stack.sort_by(|a, b| b.path.len().cmp(&a.path.len()));
+            state_stack.sort_by(|a, b| b.path.cmp(&a.path));
             let state = state_stack.pop().unwrap();
 
             if !visited.contains_key(&state.position)
-                || *visited.get(&state.position).unwrap() > state.path.len()
+                || *visited.get(&state.position).unwrap() > state.path
             {
-                if state.position == self.e {
-                    result = state.path.clone();
+                if state.elevation == 0 {
+                    result = cmp::min(result, state.path);
                 }
-                visited.insert(state.position.clone(), state.path.len());
+                visited.insert(state.position.clone(), state.path);
 
                 let options = self.options(&state.position);
                 for op in &options {
                     let elevation = self.map.get(&op).unwrap();
-                    if elevation <= &(state.elevation + 1) {
-                        let mut extra_path = state.path.clone();
-                        extra_path.push(op.clone());
-
+                    if elevation + 1 >= state.elevation {
                         state_stack.push(State {
                             position: op.clone(),
                             elevation: *elevation,
-                            path: extra_path,
+                            path: state.path + 1,
                         });
                     }
                 }
@@ -148,5 +127,6 @@ impl Puzzle {
 struct State {
     position: Coord,
     elevation: u8,
-    path: Vec<Coord>,
+    path: usize,
 }
+

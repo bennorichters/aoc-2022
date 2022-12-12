@@ -54,7 +54,7 @@ fn solve() {
         e,
     };
 
-    puzzle.start();
+    println!("{}", puzzle.walk());
 }
 
 #[derive(Debug)]
@@ -84,11 +84,6 @@ impl Puzzle {
         }
 
         result
-    }
-
-    fn start(&mut self) {
-        let path = self.walk();
-        println!("{}", path);
     }
 
     fn walk(&mut self) -> usize {

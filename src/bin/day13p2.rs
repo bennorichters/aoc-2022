@@ -57,29 +57,25 @@ fn check(j1: &JsonValue, j2: &JsonValue) -> Option<Ordering> {
             let n1 = m1.as_u8().unwrap();
             let n2 = m2.as_u8().unwrap();
 
-            if n1 < n2 {
-                return Some(Ordering::Less);
-            } else if n1 > n2 {
-                return Some(Ordering::Greater);
+            let comp = Ord::cmp(&n1, &n2);
+            if comp != Ordering::Equal {
+                return Some(comp);
             }
         } else if m1.is_number() {
             let mut sub_arr = JsonValue::new_array();
             sub_arr.push(m1.clone()).unwrap();
-            let sub = check(&sub_arr, m2);
-            if sub.is_some() {
-                return sub;
+            if let Some(sub) = check(&sub_arr, m2) {
+                return Some(sub);
             }
         } else if m2.is_number() {
             let mut sub_arr = JsonValue::new_array();
             sub_arr.push(m2.clone()).unwrap();
-            let sub = check(m1, &sub_arr);
-            if sub.is_some() {
-                return sub;
+            if let Some(sub) = check(m1, &sub_arr) {
+                return Some(sub);
             }
         } else {
-            let sub = check(m1, m2);
-            if sub.is_some() {
-                return sub;
+            if let Some(sub) = check(m1, m2) {
+                return Some(sub);
             }
         }
     }

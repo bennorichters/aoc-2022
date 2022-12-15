@@ -20,7 +20,7 @@ fn main() {
 }
 
 fn solve() {
-    let lines = lines_from_file("tin");
+    let lines = lines_from_file("in");
 
     let mut columns: HashMap<u32, Vec<RangeInclusive<u32>>> = HashMap::new();
     let mut rows: HashMap<u32, Vec<RangeInclusive<u32>>> = HashMap::new();
@@ -112,18 +112,22 @@ impl Puzzle {
             }
         }
 
+        if candidate.1 == self.bottom_row + 2 {
+            return false;
+        }
+
         true
     }
 
     fn start(&mut self) {
         loop {
             loop {
-                if self.position.1 == self.bottom_row {
-                    return;
-                }
                 let next_position = self.next();
                 if next_position.is_none() {
                     let _ = &self.occupied.insert(self.position.clone());
+                    if self.position == Coord(500, 0) {
+                        return;
+                    }
                     break;
                 }
 

@@ -1,5 +1,5 @@
-// #![allow(dead_code)]
-// #![allow(unused_variables)]
+#![allow(dead_code)]
+#![allow(unused_variables)]
 
 use std::{
     cmp,
@@ -90,7 +90,10 @@ fn find_distance(start: usize, destination: usize, valves: &Vec<(u64, Vec<usize>
 fn walk(closed_valves: Vec<usize>, flows: Vec<u64>, distances: HashMap<(usize, usize), usize>) {
     let mut state_stack: Vec<State> = vec![State {
         minute: 0,
-        current_valve: 0,
+        you_valve: 0,
+        you_arrive: Some(0),
+        elephant_valve: 0,
+        elephant_arrive: Some(0),
         released: 0,
         closed_valves,
     }];
@@ -120,59 +123,45 @@ fn walk(closed_valves: Vec<usize>, flows: Vec<u64>, distances: HashMap<(usize, u
                 }
             }
 
-            if state.closed_valves.contains(&state.current_valve) {
-                state_stack.push(open_valve_state(state, &flows));
+            if state.closed_valves.contains(&state.you_valve) {
+                let stack_released =
+                    state.released + ((30 - state.minute - 1) as u64) * flows[state.you_valve];
+
+                let stack_closed_valves: Vec<usize> = state
+                    .closed_valves
+                    .iter()
+                    .filter(|&&e| e != state.you_valve)
+                    .cloned()
+                    .collect();
+
+                state_stack.push(State {
+                    minute: state.minute + 1,
+                    you_valve: state.you_valve,
+                    released: stack_released,
+                    closed_valves: stack_closed_valves,
+                });
             } else {
-                state_stack.append(&mut next_closed_valve_states(state, &distances));
+                for next_closed in &state.closed_valves {
+                    if *next_closed != state.you_valve {
+                        let key = (
+                            cmp::min(state.you_valve, *next_closed),
+                            cmp::max(state.you_valve, *next_closed),
+                        );
+                        let distance = distances.get(&key).unwrap();
+
+                        state_stack.push(State {
+                            minute: state.minute + distance,
+                            you_valve: *next_closed,
+                            released: state.released,
+                            closed_valves: state.closed_valves.clone(),
+                        });
+                    }
+                }
             }
         }
     }
 
     println!("{:?}", result_option);
-}
-
-fn next_closed_valve_states(
-    current: State,
-    distances: &HashMap<(usize, usize), usize>,
-) -> Vec<State> {
-    let mut result: Vec<State> = Vec::new();
-    for next_closed in &current.closed_valves {
-        if *next_closed != current.current_valve {
-            let key = (
-                cmp::min(current.current_valve, *next_closed),
-                cmp::max(current.current_valve, *next_closed),
-            );
-            let distance = distances.get(&key).unwrap();
-
-            result.push(State {
-                minute: current.minute + distance,
-                current_valve: *next_closed,
-                released: current.released,
-                closed_valves: current.closed_valves.clone(),
-            });
-        }
-    }
-
-    result
-}
-
-fn open_valve_state(current: State, flows: &Vec<u64>) -> State {
-    let stack_released =
-        current.released + ((30 - current.minute - 1) as u64) * flows[current.current_valve];
-
-    let stack_closed_valves: Vec<usize> = current
-        .closed_valves
-        .iter()
-        .filter(|&&e| e != current.current_valve)
-        .cloned()
-        .collect();
-
-    State {
-        minute: current.minute + 1,
-        current_valve: current.current_valve,
-        released: stack_released,
-        closed_valves: stack_closed_valves,
-    }
 }
 
 fn calc_potential(
@@ -192,7 +181,10 @@ fn calc_potential(
 #[derive(Debug)]
 struct State {
     minute: usize,
-    current_valve: usize,
+    you_valve: usize,
+    you_arrive: Option<usize>,
+    elephant_valve: usize,
+    elephant_arrive: Option<usize>,
     released: u64,
     closed_valves: Vec<usize>,
 }
@@ -233,3 +225,4 @@ fn parse() -> Vec<(u64, Vec<usize>)> {
 
     result
 }
+

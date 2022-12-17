@@ -96,39 +96,35 @@ fn walk(closed_valves: Vec<usize>, flows: Vec<u64>, distances: HashMap<(usize, u
     }];
 
     let mut visited = vec![064; 30];
-    let mut result_option: Option<u64> = None;
+    let mut result = 0;
     while !state_stack.is_empty() {
         state_stack.sort_by(|a, b| a.minute.cmp(&b.minute));
         let state = state_stack.pop().unwrap();
 
         if state.minute <= 30 {
-            result_option = if let Some(result) = result_option {
-                Some(cmp::max(state.released, result))
-            } else {
-                Some(state.released)
-            };
+            result = cmp::max(state.released, result);
         }
 
-        if state.minute < 30 {
-            if state.released > visited[state.minute] {
-                visited[state.minute] = state.released;
-            } else {
-                let potential =
-                    calc_potential(state.released, &state.closed_valves, state.minute, &flows);
-                if potential <= visited[state.minute] {
-                    continue;
-                }
-            }
+        if state.minute >= 30 {
+            continue;
+        }
 
-            if state.closed_valves.contains(&state.current_valve) {
-                state_stack.push(open_valve_state(state, &flows));
-            } else {
-                state_stack.append(&mut next_closed_valve_states(state, &distances));
-            }
+        if state.released > visited[state.minute] {
+            visited[state.minute] = state.released;
+        } else if potential(state.released, &state.closed_valves, state.minute, &flows)
+            <= visited[state.minute]
+        {
+            continue;
+        }
+
+        if state.closed_valves.contains(&state.current_valve) {
+            state_stack.push(open_valve_state(state, &flows));
+        } else {
+            state_stack.append(&mut next_closed_valve_states(state, &distances));
         }
     }
 
-    println!("{:?}", result_option);
+    println!("{:?}", result);
 }
 
 fn next_closed_valve_states(
@@ -175,12 +171,7 @@ fn open_valve_state(current: State, flows: &Vec<u64>) -> State {
     }
 }
 
-fn calc_potential(
-    released: u64,
-    closed_valves: &Vec<usize>,
-    minute: usize,
-    flows: &Vec<u64>,
-) -> u64 {
+fn potential(released: u64, closed_valves: &Vec<usize>, minute: usize, flows: &Vec<u64>) -> u64 {
     let mut result = released;
     for c in closed_valves {
         result += (30 - minute - 1) as u64 * flows[*c];

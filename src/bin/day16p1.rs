@@ -23,6 +23,12 @@ fn main() {
     solve();
 }
 
+#[derive(Clone, Debug, Hash, Eq, PartialEq)]
+struct StartEnd {
+    start: usize,
+    end: usize,
+}
+
 fn solve() {
     let valves = parse();
 
@@ -35,14 +41,17 @@ fn solve() {
 
     let flows: Vec<u64> = valves.iter().map(|v| v.0).collect();
 
-    let mut distances: HashMap<(usize, usize), usize> = HashMap::new();
+    let mut distances: HashMap<StartEnd, usize> = HashMap::new();
     let mut start_valves = closed_valves.clone();
     start_valves.push(0);
     for start in &start_valves {
         for destination in &closed_valves {
             if start != destination {
                 let dist = find_distance(*start, *destination, &valves);
-                let key = (*cmp::min(start, destination), *cmp::max(start, destination));
+                let key = StartEnd {
+                    start: *cmp::min(start, destination),
+                    end: *cmp::max(start, destination),
+                };
                 distances.insert(key, dist);
             }
         }
@@ -87,7 +96,7 @@ fn find_distance(start: usize, destination: usize, valves: &Vec<(u64, Vec<usize>
     result_option.unwrap()
 }
 
-fn walk(closed_valves: Vec<usize>, flows: Vec<u64>, distances: HashMap<(usize, usize), usize>) {
+fn walk(closed_valves: Vec<usize>, flows: Vec<u64>, distances: HashMap<StartEnd, usize>) {
     let mut state_stack: Vec<State> = vec![State {
         minute: 0,
         current_valve: 0,
@@ -127,17 +136,14 @@ fn walk(closed_valves: Vec<usize>, flows: Vec<u64>, distances: HashMap<(usize, u
     println!("{:?}", result);
 }
 
-fn next_closed_valve_states(
-    current: State,
-    distances: &HashMap<(usize, usize), usize>,
-) -> Vec<State> {
+fn next_closed_valve_states(current: State, distances: &HashMap<StartEnd, usize>) -> Vec<State> {
     let mut result: Vec<State> = Vec::new();
     for next_closed in &current.closed_valves {
         if *next_closed != current.current_valve {
-            let key = (
-                cmp::min(current.current_valve, *next_closed),
-                cmp::max(current.current_valve, *next_closed),
-            );
+            let key = StartEnd {
+                start: cmp::min(current.current_valve, *next_closed),
+                end: cmp::max(current.current_valve, *next_closed),
+            };
             let distance = distances.get(&key).unwrap();
 
             result.push(State {

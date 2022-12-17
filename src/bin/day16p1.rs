@@ -23,6 +23,14 @@ fn main() {
     solve();
 }
 
+#[derive(Debug)]
+struct State {
+    minute: usize,
+    current_valve: usize,
+    released: u64,
+    closed_valves: Vec<usize>,
+}
+
 #[derive(Clone, Debug, Hash, Eq, PartialEq)]
 struct StartEnd {
     start: usize,
@@ -184,14 +192,6 @@ fn potential(released: u64, closed_valves: &Vec<usize>, minute: usize, flows: &V
     }
 
     result
-}
-
-#[derive(Debug)]
-struct State {
-    minute: usize,
-    current_valve: usize,
-    released: u64,
-    closed_valves: Vec<usize>,
 }
 
 fn parse() -> Vec<(u64, Vec<usize>)> {

@@ -1,11 +1,8 @@
-// #![allow(dead_code)]
-// #![allow(unused_variables)]
-
 use std::{
     cmp,
     fs::File,
     io::{prelude::*, BufReader},
-    path::Path, collections::HashMap,
+    path::Path,
 };
 
 use regex::Regex;
@@ -21,10 +18,6 @@ fn lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
 fn main() {
     solve();
 }
-
-
-#[derive(Debug, Hash, Eq, PartialEq)]
-struct MinuteValve(usize, usize);
 
 fn solve() {
     let valves = parse();
@@ -43,27 +36,10 @@ fn solve() {
         closed_valves,
     }];
 
-    let mut visited: HashMap<MinuteValve, u64> = HashMap::new();
+    let mut visited = vec![064; 30];
     let mut result_option: Option<u64> = None;
-    let mut count = 0;
     while !state_stack.is_empty() {
-        if count == 56000 {
-            println!();
-            for s in state_stack {
-                println!("{:?}", s);
-            }
-            return;
-        }
-        count += 1;
         let state = state_stack.pop().unwrap();
-
-        let visited_key = MinuteValve(state.minute, state.current_valve);
-        if let Some(previous) = visited.get(&visited_key) {
-            if previous >= &state.released {
-                continue;
-            }
-        } 
-        visited.insert(visited_key, state.released);
 
         result_option = if let Some(result) = result_option {
             Some(cmp::max(state.released, result))
@@ -72,13 +48,19 @@ fn solve() {
         };
 
         if state.minute < 30 {
+            if state.released > visited[state.minute] {
+                visited[state.minute] = state.released;
+            } else {
+                let potential =
+                    calc_potential(state.released, &state.closed_valves, state.minute, &valves);
+                if potential <= visited[state.minute] {
+                    continue;
+                }
+            }
+
             if state.closed_valves.contains(&state.current_valve) {
                 let stack_released = state.released
                     + ((30 - state.minute - 1) as u64) * valves[state.current_valve].0;
-
-                // if state.current_valve == 3 {
-                //     println!("{:?}, {:?}", state, stack_released);
-                // }
 
                 let stack_closed_valves: Vec<usize> = state
                     .closed_valves
@@ -107,6 +89,20 @@ fn solve() {
     }
 
     println!("{:?}", result_option);
+}
+
+fn calc_potential(
+    released: u64,
+    closed_valves: &Vec<usize>,
+    minute: usize,
+    valves: &Vec<(u64, Vec<usize>)>,
+) -> u64 {
+    let mut result = released;
+    for c in closed_valves {
+        result += (30 - minute - 1) as u64 * valves[*c].0;
+    }
+
+    result
 }
 
 #[derive(Debug)]

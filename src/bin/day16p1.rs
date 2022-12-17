@@ -135,16 +135,35 @@ fn walk(closed_valves: Vec<usize>, flows: Vec<u64>, distances: HashMap<StartEnd,
         }
 
         if state.closed_valves.contains(&state.current_valve) {
-            state_stack.push(open_valve_state(state, &flows));
+            state_stack.push(open_current_valve(state, &flows));
         } else {
-            state_stack.append(&mut next_closed_valve_states(state, &distances));
+            state_stack.append(&mut valves_to_close(state, &distances));
         }
     }
 
     println!("{:?}", result);
 }
 
-fn next_closed_valve_states(current: State, distances: &HashMap<StartEnd, usize>) -> Vec<State> {
+fn open_current_valve(current: State, flows: &Vec<u64>) -> State {
+    let stack_released =
+        current.released + ((30 - current.minute - 1) as u64) * flows[current.current_valve];
+
+    let stack_closed_valves: Vec<usize> = current
+        .closed_valves
+        .iter()
+        .filter(|&&e| e != current.current_valve)
+        .cloned()
+        .collect();
+
+    State {
+        minute: current.minute + 1,
+        current_valve: current.current_valve,
+        released: stack_released,
+        closed_valves: stack_closed_valves,
+    }
+}
+
+fn valves_to_close(current: State, distances: &HashMap<StartEnd, usize>) -> Vec<State> {
     let mut result: Vec<State> = Vec::new();
     for next_closed in &current.closed_valves {
         if *next_closed != current.current_valve {
@@ -164,25 +183,6 @@ fn next_closed_valve_states(current: State, distances: &HashMap<StartEnd, usize>
     }
 
     result
-}
-
-fn open_valve_state(current: State, flows: &Vec<u64>) -> State {
-    let stack_released =
-        current.released + ((30 - current.minute - 1) as u64) * flows[current.current_valve];
-
-    let stack_closed_valves: Vec<usize> = current
-        .closed_valves
-        .iter()
-        .filter(|&&e| e != current.current_valve)
-        .cloned()
-        .collect();
-
-    State {
-        minute: current.minute + 1,
-        current_valve: current.current_valve,
-        released: stack_released,
-        closed_valves: stack_closed_valves,
-    }
 }
 
 fn potential(released: u64, closed_valves: &Vec<usize>, minute: usize, flows: &Vec<u64>) -> u64 {

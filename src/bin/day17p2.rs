@@ -98,8 +98,9 @@ fn solve() {
 
         // Round 51465 is magic :)
         // it has height 80761
-        // after 1715 rounds we arrive at the same block_index (0) with the same jet_index (10031)
-        // the next time with this combination the height is 2690 higher
+        // from there on, after every 1715 rounds we arrive at the same block_index (0) 
+        // with the same jet_index (10031)
+        // every next time with this combination the height is 2690 higher
         // this repeats (1_000_000_000_000 - 51465) / 1715 = 583090349 times before we arrive, so
         // 583090349 + 2690 + 80761 is the answer
         if block_index == 0 {

@@ -9,6 +9,7 @@ use std::{
     path::Path,
 };
 
+use itertools::Itertools;
 use regex::Regex;
 
 fn lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
@@ -23,6 +24,20 @@ fn main() {
     solve();
 }
 
+#[derive(Debug)]
+struct State {
+    minute: usize,
+    current_valve: usize,
+    released: u64,
+    closed_valves: Vec<usize>,
+}
+
+#[derive(Clone, Debug, Hash, Eq, PartialEq)]
+struct StartEnd {
+    start: usize,
+    end: usize,
+}
+
 fn solve() {
     let valves = parse();
 
@@ -35,20 +50,59 @@ fn solve() {
 
     let flows: Vec<u64> = valves.iter().map(|v| v.0).collect();
 
-    let mut distances: HashMap<(usize, usize), usize> = HashMap::new();
+    let mut distances: HashMap<StartEnd, usize> = HashMap::new();
     let mut start_valves = closed_valves.clone();
     start_valves.push(0);
     for start in &start_valves {
         for destination in &closed_valves {
             if start != destination {
                 let dist = find_distance(*start, *destination, &valves);
-                let key = (*cmp::min(start, destination), *cmp::max(start, destination));
+                let key = StartEnd {
+                    start: *cmp::min(start, destination),
+                    end: *cmp::max(start, destination),
+                };
                 distances.insert(key, dist);
             }
         }
     }
 
-    walk(closed_valves, flows, distances);
+    let mut result = 0;
+    let bar = sub_set(&closed_valves);
+    for b in bar {
+        let w0 = walk(&b.0, &flows, &distances);
+        let w1 = walk(&b.1, &flows, &distances);
+
+        let total = w0 + w1;
+        if total > result {
+            println!("{}", total);
+        }
+        result = cmp::max(result, total);
+    }
+
+    println!("{}", result);
+}
+
+fn sub_set(closed_valves: &Vec<usize>) -> Vec<(Vec<usize>, Vec<usize>)> {
+    let mut result: Vec<(Vec<usize>, Vec<usize>)> = Vec::new();
+
+    for sub1len in 0..closed_valves.len() {
+        let combis = (0..closed_valves.len()).combinations(sub1len);
+
+        for combi in combis {
+            let mut sub0: Vec<usize> = Vec::new();
+            for c in combi {
+                sub0.push(closed_valves[c]);
+            }
+
+            let sub1: Vec<usize> = closed_valves
+                .iter()
+                .cloned()
+                .filter(|e| !sub0.contains(e))
+                .collect();
+            result.push((sub0, sub1));
+        }
+    }
+    result
 }
 
 fn find_distance(start: usize, destination: usize, valves: &Vec<(u64, Vec<usize>)>) -> usize {
@@ -87,106 +141,94 @@ fn find_distance(start: usize, destination: usize, valves: &Vec<(u64, Vec<usize>
     result_option.unwrap()
 }
 
-fn walk(closed_valves: Vec<usize>, flows: Vec<u64>, distances: HashMap<(usize, usize), usize>) {
+fn walk(closed_valves: &Vec<usize>, flows: &Vec<u64>, distances: &HashMap<StartEnd, usize>) -> u64 {
     let mut state_stack: Vec<State> = vec![State {
         minute: 0,
-        you_valve: 0,
-        you_arrive: Some(0),
-        elephant_valve: 0,
-        elephant_arrive: Some(0),
+        current_valve: 0,
         released: 0,
-        closed_valves,
+        closed_valves: closed_valves.to_vec(),
     }];
 
-    let mut visited = vec![064; 30];
-    let mut result_option: Option<u64> = None;
+    let mut visited = vec![064; 26];
+    let mut result = 0;
     while !state_stack.is_empty() {
         state_stack.sort_by(|a, b| a.minute.cmp(&b.minute));
         let state = state_stack.pop().unwrap();
 
-        if state.minute <= 30 {
-            result_option = if let Some(result) = result_option {
-                Some(cmp::max(state.released, result))
-            } else {
-                Some(state.released)
-            };
+        if state.minute <= 26 {
+            result = cmp::max(state.released, result);
         }
 
-        if state.minute < 30 {
-            if state.released > visited[state.minute] {
-                visited[state.minute] = state.released;
-            } else {
-                let potential =
-                    calc_potential(state.released, &state.closed_valves, state.minute, &flows);
-                if potential <= visited[state.minute] {
-                    continue;
-                }
-            }
-
-            if state.closed_valves.contains(&state.you_valve) {
-                let stack_released =
-                    state.released + ((30 - state.minute - 1) as u64) * flows[state.you_valve];
-
-                let stack_closed_valves: Vec<usize> = state
-                    .closed_valves
-                    .iter()
-                    .filter(|&&e| e != state.you_valve)
-                    .cloned()
-                    .collect();
-
-                state_stack.push(State {
-                    minute: state.minute + 1,
-                    you_valve: state.you_valve,
-                    released: stack_released,
-                    closed_valves: stack_closed_valves,
-                });
-            } else {
-                for next_closed in &state.closed_valves {
-                    if *next_closed != state.you_valve {
-                        let key = (
-                            cmp::min(state.you_valve, *next_closed),
-                            cmp::max(state.you_valve, *next_closed),
-                        );
-                        let distance = distances.get(&key).unwrap();
-
-                        state_stack.push(State {
-                            minute: state.minute + distance,
-                            you_valve: *next_closed,
-                            released: state.released,
-                            closed_valves: state.closed_valves.clone(),
-                        });
-                    }
-                }
-            }
+        if state.minute >= 26 {
+            continue;
         }
-    }
 
-    println!("{:?}", result_option);
-}
+        if state.released > visited[state.minute] {
+            visited[state.minute] = state.released;
+        } else if potential(state.released, &state.closed_valves, state.minute, &flows)
+            <= visited[state.minute]
+        {
+            continue;
+        }
 
-fn calc_potential(
-    released: u64,
-    closed_valves: &Vec<usize>,
-    minute: usize,
-    flows: &Vec<u64>,
-) -> u64 {
-    let mut result = released;
-    for c in closed_valves {
-        result += (30 - minute - 1) as u64 * flows[*c];
+        if state.closed_valves.contains(&state.current_valve) {
+            state_stack.push(open_current_valve(state, &flows));
+        } else {
+            state_stack.append(&mut valves_to_close(state, &distances));
+        }
     }
 
     result
 }
 
-#[derive(Debug)]
-struct State {
-    minute: usize,
-    you_valve: usize,
-    you_arrive: Option<usize>,
-    elephant_valve: usize,
-    elephant_arrive: Option<usize>,
-    released: u64,
-    closed_valves: Vec<usize>,
+fn open_current_valve(current: State, flows: &Vec<u64>) -> State {
+    let stack_released =
+        current.released + ((26 - current.minute - 1) as u64) * flows[current.current_valve];
+
+    let stack_closed_valves: Vec<usize> = current
+        .closed_valves
+        .iter()
+        .filter(|&&e| e != current.current_valve)
+        .cloned()
+        .collect();
+
+    State {
+        minute: current.minute + 1,
+        current_valve: current.current_valve,
+        released: stack_released,
+        closed_valves: stack_closed_valves,
+    }
+}
+
+fn valves_to_close(current: State, distances: &HashMap<StartEnd, usize>) -> Vec<State> {
+    let mut result: Vec<State> = Vec::new();
+    for next_closed in &current.closed_valves {
+        if *next_closed != current.current_valve {
+            let key = StartEnd {
+                start: cmp::min(current.current_valve, *next_closed),
+                end: cmp::max(current.current_valve, *next_closed),
+            };
+            let distance = distances.get(&key).unwrap();
+
+            result.push(State {
+                minute: current.minute + distance,
+                current_valve: *next_closed,
+                released: current.released,
+                closed_valves: current.closed_valves.clone(),
+            });
+        }
+    }
+
+    result
+}
+
+fn potential(released: u64, closed_valves: &Vec<usize>, minute: usize, flows: &Vec<u64>) -> u64 {
+    let mut result = released;
+    for c in closed_valves {
+        result += (26 - minute - 1) as u64 * flows[*c];
+    }
+
+    result
 }
 
 fn parse() -> Vec<(u64, Vec<usize>)> {
@@ -225,4 +267,3 @@ fn parse() -> Vec<(u64, Vec<usize>)> {
 
     result
 }
-

@@ -1,5 +1,5 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
+// #![allow(dead_code)]
+// #![allow(unused_variables)]
 
 use std::{
     cmp,
@@ -57,47 +57,38 @@ impl<'a, 'b> Sub<&'b Resources> for &'a Resources {
     }
 }
 
-#[derive(Clone, Debug)]
-enum Robot {
-    Ore(Resources),
-    Clay(Resources),
-    Obsidoan(Resources),
-    Geode(Resources),
-}
-
-type Blueprint = Vec<Robot>;
+type Blueprint = Vec<Resources>;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 struct State {
     minute: usize,
     funds: Resources,
-    robots: RobotInventory,
+    robots: Vec<usize>,
     geode_end_count: usize,
 }
 
-#[derive(Clone, Debug, Hash, Eq, PartialEq)]
-struct RobotInventory {
-    ore_robot_count: usize,
-    clay_robot_count: usize,
-    obsidian_robot_count: usize,
-}
+const ROBOT_ORE: usize = 0;
+const ROBOT_CLAY: usize = 1;
+const ROBOT_OBSIDIAN: usize = 2;
+const ROBOT_GEO: usize = 3;
 
 fn solve() {
     let blueprints: Vec<Blueprint> = parse();
 
-    let r = walk(&blueprints[1]);
-    println!("{}", r);
+    let mut result = 0;
+    for i in 0..blueprints.len() {
+        println!("{}", i);
+        let geo = walk(&blueprints[i]);
+        result += (i + 1) * geo;
+    }
+    println!("{}", result);
 }
 
 fn walk(blueprint: &Blueprint) -> usize {
     let mut state_stack: Vec<State> = Vec::new();
     state_stack.push(State {
         minute: 0,
-        robots: RobotInventory {
-            ore_robot_count: 1,
-            clay_robot_count: 0,
-            obsidian_robot_count: 0,
-        },
+        robots: vec![1, 0, 0],
         funds: Resources {
             ore: 0,
             clay: 0,
@@ -105,6 +96,8 @@ fn walk(blueprint: &Blueprint) -> usize {
         },
         geode_end_count: 0,
     });
+
+    let max_costs = calc_max_costs(blueprint);
 
     let mut result = 0;
     let mut visited: HashSet<State> = HashSet::new();
@@ -115,23 +108,33 @@ fn walk(blueprint: &Blueprint) -> usize {
             continue;
         }
 
+        if state.geode_end_count > result {
+            println!("{:?}", state);
+        }
         result = cmp::max(result, state.geode_end_count);
 
-        if state.minute < EXPIRE {
-            let mut could_buy_geo_robot = false;
-            for robot in blueprint {
-                if let Some(next_state) = buy_robot(&state, robot) {
-                    if let Robot::Geode(_) = robot {
-                        could_buy_geo_robot = true;
+        let minutes_remain = EXPIRE - state.minute;
+        if minutes_remain > 0 {
+            for (robot_index, robot_costs) in blueprint.iter().enumerate() {
+                if !enough_robots(&state, &max_costs, robot_index) {
+                    if let Some(funds_remain) = spend_funds(&state.funds, robot_costs) {
+                        let mut next_state = next_state(&state, &funds_remain);
+                        if robot_index == ROBOT_GEO {
+                            next_state.geode_end_count += EXPIRE - 1 - state.minute;
+                        } else {
+                            next_state.robots[robot_index] += 1;
+                        }
+                        state_stack.push(next_state);
                     }
-
-                    state_stack.push(next_state);
                 }
             }
 
-            if !could_buy_geo_robot {
+            if state.funds.ore <= max_costs.ore
+                || (state.funds.clay <= max_costs.clay && state.robots[ROBOT_CLAY] > 0)
+                || (state.funds.obsidian <= max_costs.obsidian && state.robots[ROBOT_OBSIDIAN] > 0)
+            {
                 // don't buy but save
-                state_stack.push(update_state(state.clone(), &state.robots));
+                state_stack.push(next_state(&state, &state.funds));
             }
         }
     }
@@ -139,55 +142,59 @@ fn walk(blueprint: &Blueprint) -> usize {
     result
 }
 
-fn buy_robot(state: &State, robot: &Robot) -> Option<State> {
-    let mut result = state.clone();
-
-    match robot {
-        Robot::Ore(price) => {
-            if let Some(left) = spend_funds(&state.funds, &price) {
-                result.funds = left;
-                result.robots.ore_robot_count += 1;
-            } else {
-                return None;
-            }
-        }
-        Robot::Clay(price) => {
-            if let Some(left) = spend_funds(&state.funds, &price) {
-                result.funds = left;
-                result.robots.clay_robot_count += 1;
-            } else {
-                return None;
-            }
-        }
-        Robot::Obsidoan(price) => {
-            if let Some(left) = spend_funds(&state.funds, &price) {
-                result.funds = left;
-                result.robots.obsidian_robot_count += 1;
-            } else {
-                return None;
-            }
-        }
-        Robot::Geode(price) => {
-            if let Some(left) = spend_funds(&state.funds, &price) {
-                result.funds = left;
-                result.geode_end_count += EXPIRE - state.minute - 1;
-            } else {
-                return None;
-            }
-        }
+fn enough_robots(state: &State, max_costs: &Resources, robot_index: usize) -> bool {
+    if robot_index == ROBOT_GEO {
+        return false;
     }
 
-    result = update_state(result, &state.robots);
-    Some(result)
+    let minutes_remain = EXPIRE - state.minute;
+
+    let stock = match robot_index {
+        ROBOT_ORE => state.funds.ore,
+        ROBOT_CLAY => state.funds.clay,
+        _ => state.funds.obsidian,
+    };
+
+    let needed = match robot_index {
+        ROBOT_ORE => max_costs.ore,
+        ROBOT_CLAY => max_costs.clay,
+        _ => max_costs.obsidian,
+    };
+
+    let robot_count = state.robots[robot_index];
+
+    robot_count * minutes_remain + stock >= needed * minutes_remain
 }
 
-fn update_state(mut state_to_update: State, inventory: &RobotInventory) -> State {
-    state_to_update.funds.ore += inventory.ore_robot_count;
-    state_to_update.funds.clay += inventory.clay_robot_count;
-    state_to_update.funds.obsidian += inventory.obsidian_robot_count;
-    state_to_update.minute += 1;
+fn next_state(state: &State, funds_remain: &Resources) -> State {
+    let next_funds = Resources {
+        ore: funds_remain.ore + state.robots[ROBOT_ORE],
+        clay: funds_remain.clay + state.robots[ROBOT_CLAY],
+        obsidian: funds_remain.obsidian + state.robots[ROBOT_OBSIDIAN],
+    };
 
-    state_to_update
+    State {
+        minute: state.minute + 1,
+        funds: next_funds,
+        robots: state.robots.clone(),
+        geode_end_count: state.geode_end_count,
+    }
+}
+
+fn calc_max_costs(blueprint: &Blueprint) -> Resources {
+    let mut result = Resources {
+        ore: 0,
+        clay: 0,
+        obsidian: 0,
+    };
+
+    for robot in blueprint {
+        result.ore = cmp::max(result.ore, robot.ore);
+        result.clay = cmp::max(result.clay, robot.clay);
+        result.obsidian = cmp::max(result.obsidian, robot.obsidian);
+    }
+
+    result
 }
 
 fn spend_funds(funds: &Resources, price: &Resources) -> Option<Resources> {
@@ -199,7 +206,7 @@ fn spend_funds(funds: &Resources, price: &Resources) -> Option<Resources> {
 }
 
 fn parse() -> Vec<Blueprint> {
-    let lines = lines_from_file("tin");
+    let lines = lines_from_file("in");
 
     let mut blueprints: Vec<Blueprint> = Vec::new();
     for line in lines {
@@ -243,12 +250,7 @@ fn parse() -> Vec<Blueprint> {
             obsidian,
         };
 
-        blueprints.push(vec![
-            Robot::Ore(ore_robot),
-            Robot::Clay(clay_robot),
-            Robot::Obsidoan(obsidian_robot),
-            Robot::Geode(geode_robot),
-        ]);
+        blueprints.push(vec![ore_robot, clay_robot, obsidian_robot, geode_robot]);
     }
 
     blueprints

@@ -20,9 +20,6 @@ fn main() {
     solve();
 }
 
-// 34588563455325
-// answer: 3059361893925
-
 fn solve() {
     let monkeys = parse();
 

@@ -24,7 +24,7 @@ fn solve() {
     let nrs: Vec<i32> = lines.iter().map(|n| n.parse::<i32>().unwrap()).collect();
     let length = nrs.len() as i32;
 
-    let mut indices: Vec<usize> = (0..length).rev().map(|i| i as usize).collect();
+    let mut indices: Vec<usize> = (0..length as usize).rev().collect();
     let mut decoded = nrs.clone();
     while !indices.is_empty() {
         let index = indices.pop().unwrap();

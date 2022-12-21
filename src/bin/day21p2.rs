@@ -56,7 +56,7 @@ fn search(
     while !state_stack.is_empty() {
         let monkey = state_stack.pop().unwrap();
         let operation = monkeys.get(&monkey.to_owned()).unwrap();
-        if let Some(result) = calc(&operation, &resolved) {
+        if let Some(result) = operate(&operation, &resolved) {
             if monkey == root_eq1 {
                 println!("--> {}, {}", monkey, result);
                 found1 = Some(result);
@@ -85,49 +85,30 @@ fn search(
     panic!();
 }
 
-fn calc(op: &Operation, resolved: &HashMap<String, i64>) -> Option<i64> {
+fn operate(op: &Operation, resolved: &HashMap<String, i64>) -> Option<i64> {
     match op {
-        Operation::Add(m1, m2) => {
-            if let (Some(sub_op1), Some(sub_op2)) =
-                (resolved.get(&m1.to_owned()), resolved.get(&m2.to_owned()))
-            {
-                Some(sub_op1 + sub_op2)
-            } else {
-                None
-            }
-        }
-        Operation::Divide(m1, m2) => {
-            if let (Some(sub_op1), Some(sub_op2)) =
-                (resolved.get(&m1.to_owned()), resolved.get(&m2.to_owned()))
-            {
-                if sub_op1 % sub_op2 != 0 {
-                    Some(sub_op1 / sub_op2 + 1)
-                } else {
-                    Some(sub_op1 / sub_op2)
-                }
-            } else {
-                None
-            }
-        }
-        Operation::Multiply(m1, m2) => {
-            if let (Some(sub_op1), Some(sub_op2)) =
-                (resolved.get(&m1.to_owned()), resolved.get(&m2.to_owned()))
-            {
-                Some(sub_op1 * sub_op2)
-            } else {
-                None
-            }
-        }
+        Operation::Add(m1, m2) => calc(m1, m2, resolved, |v1, v2| v1 + v2),
+        Operation::Divide(m1, m2) => calc(m1, m2, resolved, |v1, v2| {
+            v1 / v2 + if v1 % v2 == 0 { 0 } else { 1 }
+        }),
+        Operation::Multiply(m1, m2) => calc(m1, m2, resolved, |v1, v2| v1 * v2),
         Operation::Number(nr) => Some(*nr),
-        Operation::Subtract(m1, m2) => {
-            if let (Some(sub_op1), Some(sub_op2)) =
-                (resolved.get(&m1.to_owned()), resolved.get(&m2.to_owned()))
-            {
-                Some(sub_op1 - sub_op2)
-            } else {
-                None
-            }
-        }
+        Operation::Subtract(m1, m2) => calc(m1, m2, resolved, |v1, v2| v1 - v2),
+    }
+}
+
+fn calc<F: Fn(i64, i64) -> i64>(
+    m1: &str,
+    m2: &str,
+    resolved: &HashMap<String, i64>,
+    f: F,
+) -> Option<i64> {
+    if let (Some(sub_op1), Some(sub_op2)) =
+        (resolved.get(&m1.to_owned()), resolved.get(&m2.to_owned()))
+    {
+        Some(f(*sub_op1, *sub_op2))
+    } else {
+        None
     }
 }
 

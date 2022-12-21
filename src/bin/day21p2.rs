@@ -28,25 +28,21 @@ fn solve() {
     let root_eq1 = String::from("hsdb");
     let root_eq2 = String::from("mwrd");
 
-    let mut min = 1_000_000_000_000;
-    let mut max = 9_000_000_000_000;
+    let mut min_max = (1_000_000_000_000, 9_000_000_000_000);
 
     for _ in 0..100 {
-        println!("{}, {}", min, max);
-        let r = search(min, max, root_eq1.to_owned(), root_eq2.to_owned(), &monkeys);
-        min = r.0;
-        max = r.1;
+        println!("{:?}", min_max);
+        min_max = search(min_max, root_eq1.to_owned(), root_eq2.to_owned(), &monkeys);
     }
 }
 
 fn search(
-    min: i64,
-    max: i64,
+    min_max: (i64, i64),
     root_eq1: String,
     root_eq2: String,
     monkeys: &HashMap<String, Operation>,
 ) -> (i64, i64) {
-    let candidate = min + (max - min) / 2;
+    let candidate = min_max.0 + (min_max.1 - min_max.0) / 2;
     let mut found1: Option<i64> = None;
     let mut found2: Option<i64> = None;
 
@@ -71,9 +67,9 @@ fn search(
                     println!("SUCCES! {}", candidate);
                 }
                 if r1 < r2 {
-                    return (min, candidate);
+                    return (min_max.0, candidate);
                 }
-                return (candidate, max);
+                return (candidate, min_max.1);
             }
 
             resolved.insert(monkey.to_owned(), result);

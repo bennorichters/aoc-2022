@@ -29,7 +29,7 @@ enum Instruction {
     Right,
 }
 
-#[derive(Clone, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 enum Facing {
     North,
     East,
@@ -39,7 +39,7 @@ enum Facing {
 
 const SQUARE_SIZE: usize = 50;
 
-#[derive(Clone, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 enum Region {
     A,
     B,
@@ -83,7 +83,7 @@ fn region_changes() -> HashMap<(Region, Facing), (Region, Facing)> {
     ])
 }
 
-fn changed_coordinate(old: Coord, old_facing: Facing, new_facing: Facing) -> Coord {
+fn changed_coordinate(old: &Coord, old_facing: &Facing, new_facing: &Facing) -> Coord {
     match old_facing {
         Facing::North => match new_facing {
             Facing::North => Coord(old.0, SQUARE_SIZE - 1),
@@ -195,8 +195,8 @@ impl Puzzle {
     fn candidate_north(&mut self) -> (Region, Facing, Coord) {
         if self.position.1 > 0 {
             (
-                self.region.clone(),
-                self.facing.clone(),
+                self.region,
+                self.facing,
                 Coord(self.position.0, self.position.1 - 1),
             )
         } else {
@@ -207,8 +207,8 @@ impl Puzzle {
     fn candidate_east(&mut self) -> (Region, Facing, Coord) {
         if self.position.0 < SQUARE_SIZE - 1 {
             (
-                self.region.clone(),
-                self.facing.clone(),
+                self.region,
+                self.facing,
                 Coord(self.position.0 + 1, self.position.1),
             )
         } else {
@@ -219,8 +219,8 @@ impl Puzzle {
     fn candidate_south(&mut self) -> (Region, Facing, Coord) {
         if self.position.1 < SQUARE_SIZE - 1 {
             (
-                self.region.clone(),
-                self.facing.clone(),
+                self.region,
+                self.facing,
                 Coord(self.position.0, self.position.1 + 1),
             )
         } else {
@@ -231,8 +231,8 @@ impl Puzzle {
     fn candidate_west(&mut self) -> (Region, Facing, Coord) {
         if self.position.0 > 0 {
             (
-                self.region.clone(),
-                self.facing.clone(),
+                self.region,
+                self.facing,
                 Coord(self.position.0 - 1, self.position.1),
             )
         } else {
@@ -241,15 +241,10 @@ impl Puzzle {
     }
 
     fn candidate_changed_region(&mut self, facing: Facing) -> (Region, Facing, Coord) {
-        let change = self
-            .region_changes
-            .get(&(self.region.clone(), facing))
-            .unwrap();
+        let change = self.region_changes.get(&(self.region, facing)).unwrap();
+        let coord = changed_coordinate(&self.position, &self.facing, &change.1);
 
-        let coord =
-            changed_coordinate(self.position.clone(), self.facing.clone(), change.1.clone());
-
-        (change.0.clone(), change.1.clone(), coord)
+        (change.0, change.1, coord)
     }
 }
 

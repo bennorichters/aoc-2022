@@ -54,32 +54,39 @@ fn solve() {
     puzzle.walk();
 }
 
+//  Layout of regions
+//  
+//  BA
+//  C
+//  D
+// FE
+
 fn region_changes() -> HashMap<(Region, Facing), (Region, Facing)> {
     HashMap::from([
-        ((Region::A, Facing::West), (Region::B, Facing::West)),
         ((Region::A, Facing::North), (Region::F, Facing::North)),
         ((Region::A, Facing::East), (Region::D, Facing::West)),
         ((Region::A, Facing::South), (Region::C, Facing::West)),
+        ((Region::A, Facing::West), (Region::B, Facing::West)),
+        ((Region::B, Facing::North), (Region::F, Facing::East)),
         ((Region::B, Facing::East), (Region::A, Facing::East)),
         ((Region::B, Facing::South), (Region::C, Facing::South)),
         ((Region::B, Facing::West), (Region::E, Facing::East)),
-        ((Region::B, Facing::North), (Region::F, Facing::East)),
         ((Region::C, Facing::North), (Region::B, Facing::North)),
+        ((Region::C, Facing::East), (Region::A, Facing::North)),
         ((Region::C, Facing::South), (Region::D, Facing::South)),
         ((Region::C, Facing::West), (Region::E, Facing::South)),
-        ((Region::C, Facing::East), (Region::A, Facing::North)),
         ((Region::D, Facing::North), (Region::C, Facing::North)),
-        ((Region::D, Facing::West), (Region::E, Facing::West)),
-        ((Region::D, Facing::South), (Region::F, Facing::West)),
         ((Region::D, Facing::East), (Region::A, Facing::West)),
+        ((Region::D, Facing::South), (Region::F, Facing::West)),
+        ((Region::D, Facing::West), (Region::E, Facing::West)),
+        ((Region::E, Facing::North), (Region::C, Facing::East)),
         ((Region::E, Facing::East), (Region::D, Facing::East)),
         ((Region::E, Facing::South), (Region::F, Facing::South)),
-        ((Region::E, Facing::North), (Region::C, Facing::East)),
         ((Region::E, Facing::West), (Region::B, Facing::East)),
         ((Region::F, Facing::North), (Region::E, Facing::North)),
         ((Region::F, Facing::East), (Region::D, Facing::North)),
-        ((Region::F, Facing::West), (Region::B, Facing::South)),
         ((Region::F, Facing::South), (Region::A, Facing::South)),
+        ((Region::F, Facing::West), (Region::B, Facing::South)),
     ])
 }
 

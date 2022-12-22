@@ -199,39 +199,26 @@ impl Puzzle {
     }
 
     fn candidate_north(&mut self) -> Option<Coord> {
-        if self.position.1 > 0 {
-            Some(Coord(self.position.0, self.position.1 - 1))
-        } else {
-            None
-        }
+        (self.position.1 > 0).then(|| Coord(self.position.0, self.position.1 - 1))
     }
 
     fn candidate_east(&mut self) -> Option<Coord> {
-        if self.position.0 < SQUARE_SIZE - 1 {
-            Some(Coord(self.position.0 + 1, self.position.1))
-        } else {
-            None
-        }
+        (self.position.0 < SQUARE_SIZE - 1).then(|| Coord(self.position.0 + 1, self.position.1))
     }
 
     fn candidate_south(&mut self) -> Option<Coord> {
-        if self.position.1 < SQUARE_SIZE - 1 {
-            Some(Coord(self.position.0, self.position.1 + 1))
-        } else {
-            None
-        }
+        (self.position.1 < SQUARE_SIZE - 1).then(|| Coord(self.position.0, self.position.1 + 1))
     }
 
     fn candidate_west(&mut self) -> Option<Coord> {
-        if self.position.0 > 0 {
-            Some(Coord(self.position.0 - 1, self.position.1))
-        } else {
-            None
-        }
+        (self.position.0 > 0).then(|| Coord(self.position.0 - 1, self.position.1))
     }
 
     fn candidate_changed_region(&mut self) -> (Region, Facing, Coord) {
-        let change = self.region_changes.get(&(self.region, self.facing)).unwrap();
+        let change = self
+            .region_changes
+            .get(&(self.region, self.facing))
+            .unwrap();
         let coord = changed_coordinate(&self.position, &self.facing, &change.1);
 
         (change.0, change.1, coord)

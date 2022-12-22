@@ -50,7 +50,7 @@ enum Region {
 }
 
 fn solve() {
-    let mut puzzle = parse();
+    let puzzle = parse();
     puzzle.walk();
 }
 
@@ -131,7 +131,7 @@ struct Puzzle {
 }
 
 impl Puzzle {
-    fn walk(&mut self) {
+    fn walk(mut self) {
         while let Some(instruction) = self.instructions.pop_front() {
             match instruction {
                 Instruction::Forward(nr) => self.forward(nr),

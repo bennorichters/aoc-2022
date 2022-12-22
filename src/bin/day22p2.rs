@@ -175,10 +175,16 @@ impl Puzzle {
     fn forward(&mut self, nr: usize) {
         for _ in 0..nr {
             let coord_option = match self.facing {
-                Facing::North => self.candidate_north(),
-                Facing::East => self.candidate_east(),
-                Facing::South => self.candidate_south(),
-                Facing::West => self.candidate_west(),
+                Facing::North => {
+                    (self.position.1 > 0).then(|| Coord(self.position.0, self.position.1 - 1))
+                }
+                Facing::East => (self.position.0 < SQUARE_SIZE - 1)
+                    .then(|| Coord(self.position.0 + 1, self.position.1)),
+                Facing::South => (self.position.1 < SQUARE_SIZE - 1)
+                    .then(|| Coord(self.position.0, self.position.1 + 1)),
+                Facing::West => {
+                    (self.position.0 > 0).then(|| Coord(self.position.0 - 1, self.position.1))
+                }
             };
 
             let candidate = if let Some(coord) = coord_option {
@@ -188,7 +194,7 @@ impl Puzzle {
             };
 
             let map_coord = region_to_map_coordinate(&candidate.0, &candidate.2);
-            if !self.map.get(&map_coord).unwrap() {
+            if !self.map[&map_coord] {
                 return;
             }
 
@@ -196,22 +202,6 @@ impl Puzzle {
             self.facing = candidate.1;
             self.position = candidate.2;
         }
-    }
-
-    fn candidate_north(&mut self) -> Option<Coord> {
-        (self.position.1 > 0).then(|| Coord(self.position.0, self.position.1 - 1))
-    }
-
-    fn candidate_east(&mut self) -> Option<Coord> {
-        (self.position.0 < SQUARE_SIZE - 1).then(|| Coord(self.position.0 + 1, self.position.1))
-    }
-
-    fn candidate_south(&mut self) -> Option<Coord> {
-        (self.position.1 < SQUARE_SIZE - 1).then(|| Coord(self.position.0, self.position.1 + 1))
-    }
-
-    fn candidate_west(&mut self) -> Option<Coord> {
-        (self.position.0 > 0).then(|| Coord(self.position.0 - 1, self.position.1))
     }
 
     fn candidate_changed_region(&mut self) -> (Region, Facing, Coord) {

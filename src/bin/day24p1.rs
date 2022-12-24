@@ -1,6 +1,3 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
-
 use std::{
     cmp,
     collections::HashMap,
@@ -189,9 +186,9 @@ impl Puzzle {
                     let mda = position_a.manhatten_distance(&destination);
                     let mdb = position_b.manhatten_distance(&destination);
                     mda.cmp(&mdb)
-                } else if let Some(position_a) = &a.position_option {
+                } else if a.position_option.is_some() {
                     cmp::Ordering::Less
-                } else if let Some(position_b) = &b.position_option {
+                } else if b.position_option.is_some() {
                     cmp::Ordering::Greater
                 } else {
                     a.minute.cmp(&b.minute)
@@ -199,12 +196,6 @@ impl Puzzle {
             })
             .map(|(index, _)| index)
             .unwrap()
-    }
-
-    fn foo(&self, a: &Coord, b: &Coord) -> cmp::Ordering {
-        let mda = a.manhatten_distance(&self.destination);
-        let mdb = b.manhatten_distance(&self.destination);
-        mda.cmp(&mdb)
     }
 
     fn possibilities(&self, state: &State) -> Vec<Option<Coord>> {

@@ -152,29 +152,23 @@ impl Puzzle {
 
             let visited_key = (state.position_option.clone(), state.minute % self.cycles);
             let prev_option = visited.get(&visited_key);
-            if let Some(previous) = prev_option {
-                if previous <= &state.minute {
-                    continue;
-                }
+            if matches!(prev_option, Some(previous) if previous <= &state.minute) {
+                continue;
             }
             visited.insert(visited_key, state.minute);
 
-            if let Some(result) = result_option {
-                if result <= state.minute {
-                    continue;
-                }
+            if matches!(result_option, Some(result) if result <= state.minute) {
+                continue;
             }
 
-            if let Some(position) = &state.position_option {
-                if position == goal {
-                    if let Some(result) = result_option {
-                        result_option = Some(cmp::min(result, state.minute));
-                    } else {
-                        result_option = Some(state.minute);
-                    }
-
-                    println!("Best until now: {:?}", result_option.unwrap() + 1);
+            if matches!(&state.position_option, Some(position) if position == goal) {
+                if let Some(result) = result_option {
+                    result_option = Some(cmp::min(result, state.minute));
+                } else {
+                    result_option = Some(state.minute);
                 }
+
+                println!("Best until now: {:?}", result_option.unwrap() + 1);
             }
 
             let ps = self.possibilities(&state, &start);
@@ -240,10 +234,9 @@ impl Puzzle {
         next_map: &HashMap<Coord, Vec<Direction>>,
         next_position_option: Option<Coord>,
     ) -> Option<State> {
-        if let Some(next_position) = &next_position_option {
-            if next_map.contains_key(&next_position) {
-                return None;
-            }
+        if matches!(&next_position_option, Some(next_position) if next_map.contains_key(&next_position))
+        {
+            return None;
         }
 
         Some(State {

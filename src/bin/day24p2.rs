@@ -157,7 +157,9 @@ impl Puzzle {
             }
             visited.insert(visited_key, state.minute);
 
-            if matches!(result_option, Some(result) if result <= state.minute) {
+            if matches!((result_option, &state.position_option), (Some(result), Some(position)) 
+                 if result <= state.minute + position.manhatten_distance(goal))
+            {
                 continue;
             }
 
